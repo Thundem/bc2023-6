@@ -10,7 +10,7 @@
   const port = 3000;
 
   const Page = fs.readFileSync('static/Page.html').toString();
-  const upload = multer({ dest: 'uploads/' }); // Зберігаємо завантажені файли у папці "uploads/"
+  const upload = multer({ dest: 'uploads/' }); 
   app.use(bodyParser.json());
   app.use('/images', express.static('uploads'));
 
@@ -58,10 +58,6 @@
 
   const swaggerSpec = swaggerJSDoc(swaggerOptions);
   app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
-
-  app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, "static", "Page.html"));
-  });
 
   /**
    * @swagger
@@ -340,9 +336,6 @@ app.delete('/devices/:id', (req, res) => {
     if (!user) {
       return res.status(404).json({ error: 'Користувача не знайдено' });
     }
-
-    // Логіка для отримання списку пристроїв користувача
-    // Зазвичай, ви повертаєте список за допомогою res.json
 
     res.json(user.devices || [devices]);
   });
