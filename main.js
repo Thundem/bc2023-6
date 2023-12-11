@@ -156,13 +156,20 @@
    */
   app.put('/devices/:id', (req, res) => {
     const deviceId = req.params.id;
-    const updatedDevice = req.body;
+    let updatedDevice = { ...req.body };
     const index = devices.findIndex(d => d.id === deviceId);
-
+  
     if (index === -1) {
       return res.status(404).json({ error: 'Пристрій не знайдено' });
     }
-
+  
+    // Видаляємо поля id та assigned_to з updatedDevice
+    delete updatedDevice.id;
+    delete updatedDevice.assigned_to;
+  
+    // Зберігаємо поточні значення id та assigned_to
+    updatedDevice = { ...devices[index], ...updatedDevice };
+  
     devices[index] = updatedDevice;
     res.json(updatedDevice);
   });
@@ -311,34 +318,38 @@ app.delete('/devices/:id', (req, res) => {
     res.json(newUser);
   });
 
-  /**
-   * @swagger
-   * /users/{id}/devices:
-   *   get:
-   *     summary: Повертає список пристроїв, які у користувача у користуванні.
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         description: ID користувача
-   *         schema:
-   *           type: string
-   *     responses:
-   *       200:
-   *         description: Успішно повертає список пристроїв користувача.
-   *       404:
-   *         description: Користувач не знайдено або у нього немає пристроїв.
-   */
-  app.get('/users/:id/devices', (req, res) => {
-    const userId = req.params.id;
-    const user = users.find(u => u.id === userId);
+/**
+ * @swagger
+ * /users/{id}/devices:
+ *   get:
+ *     summary: Отримання пристроїв, які використовує користувач.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID користувача
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Успішно отримано пристрої, які використовує користувач.
+ *       404:
+ *         description: Користувач не знайдений.
+ */
+app.get('/users/:id/devices', (req, res) => {
+  const userId = req.params.id;
 
-    if (!user) {
-      return res.status(404).json({ error: 'Користувача не знайдено' });
-    }
+  const user = users.find(u => u.id === userId);
 
-    res.json(user.devices || [devices]);
-  });
+  if (!user) {
+    return res.status(404).json({ error: 'Користувач не знайдений' });
+  }
+
+  const userDevices = user.devices || [];
+
+  res.json(userDevices);
+});
+  
 
   /**
    * @swagger
@@ -371,17 +382,25 @@ app.delete('/devices/:id', (req, res) => {
   app.post('/devices/:id/take', (req, res) => {
     const deviceId = req.params.id;
     const userId = req.body.userId;
-
+  
     const device = devices.find(d => d.id === deviceId);
     const user = users.find(u => u.id === userId);
-
+  
     if (!device || !user) {
       return res.status(404).json({ error: 'Пристрій або користувач не знайдені' });
     }
-
-    device.assigned_to = "використовується"
+  
+    device.assigned_to = "використовується";
+  
+    // Додаємо пристрій до користувача
+    if (!user.devices) {
+      user.devices = [];  
+    }
+    user.devices.push(device);
+  
     res.json({ message: 'Пристрій взято у користування!' });
   });
+  
 
   /**
    * @swagger
