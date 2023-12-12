@@ -441,6 +441,8 @@ app.get('/users/:id/devices', (req, res) => {
       return res.status(404).json({ error: 'Пристрій або користувач не знайдені' });
     }
 
+    user.devices.splice(device, 1);
+
     device.assigned_to = "на зберіганні"
     // Логіка для повернення пристрою на зберігання
     res.json({ message: 'Пристрій повернено на зберіання!' });
